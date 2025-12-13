@@ -53,16 +53,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clone source code and DIY
+      - name: Clone source code
         run: |
           git clone  --depth 1 https://github.com/sbwml/luci-app-openlist2 /tmp/openlist2
           mv /tmp/openlist2/luci-app-openlist2 /tmp/openlist2/openlist2 -t ./
-          sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
 
-      - name: Extract PKG_VERSION
-        id: version
+      - name: Customization of source code
+        id: DIY
         run: |
-          # 从 openlist2/Makefile 中提取 PKG_VERSION 的值
+          sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
           PKG_VERSION=$(grep -E '^\s*PKG_VERSION:=' openlist2/Makefile | awk -F':=' '{print $2}' | tr -d ' ')
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_OUTPUT
 
@@ -104,9 +103,9 @@ jobs:
       - name: Upload packages
         uses: ncipollo/release-action@main
         with:
-          name: ${{ steps.version.outputs.PKG_VERSION }}
+          name: ${{ steps.DIY.outputs.PKG_VERSION }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.version.outputs.PKG_VERSION }}
+          tag: ${{ steps.DIY.outputs.PKG_VERSION }}
           allowUpdates: true
           replacesArtifacts: true
           prerelease: false
