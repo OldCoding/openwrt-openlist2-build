@@ -64,6 +64,9 @@ jobs:
           sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
           PKG_VERSION=$(grep -E '^\s*PKG_VERSION:=' openlist2/Makefile | awk -F':=' '{print $2}' | tr -d ' ')
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_OUTPUT
+          cd /tmp/openlist2
+          VersionInfo=$(git show -s --date=short --format="Author: %an<br/>date: %cd<br/>commit: %s<br/>commit hash: %H<br/>")
+          echo "VersionInfo=$VersionInfo" >> $GITHUB_OUTPUT
 
       - name: Build with Static Linking
         run: |
@@ -110,3 +113,4 @@ jobs:
           replacesArtifacts: true
           prerelease: false
           artifacts: "${{ matrix.sdk }}-${{ matrix.arch }}.tar.gz"
+          body: ${{ steps.DIY.outputs.VersionInfo }}
