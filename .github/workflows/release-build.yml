@@ -53,9 +53,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clone source code
+      - name: Clone source code and DIY
         run: |
-          git clone  --depth 1 https://github.com/sbwml/luci-app-openlist2 /tmp/openlist2 && mv /tmp/openlist2/* ./
+          git clone  --depth 1 https://github.com/sbwml/luci-app-openlist2 /tmp/openlist2
+          mv /tmp/openlist2/luci-app-openlist2 /tmp/openlist2/openlist2 -t ./
+          sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
 
       - name: Build with Static Linking
         run: |
