@@ -1,6 +1,7 @@
 name: Build Packages
 
 on:
+  workflow_dispatch: # 改为手动触发，避免点Star频繁触发导致缓存爆炸
   watch:
     types: [started]
 
@@ -10,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 4
+      max-parallel: 4 # 👈 关键：限制最大并发数，防止缓存服务器高并发死锁
       matrix:
         arch:
           - aarch64_cortex-a53
@@ -54,20 +55,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Clone source code
-        run: |
-          git clone  --depth 1 https://github.com/sbwml/luci-app-openlist2 /tmp/openlist2
-          mv /tmp/openlist2/* ./
-
+      # 修正：直接在当前目录下修改，不需要再乱 clone
       - name: Customization of source code
         id: DIY
         run: |
-          sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
+          if [ -d "luci-app-openlist2" ]; then
+            sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
+          fi
           PKG_VERSION=$(grep -E '^\s*PKG_VERSION:=' openlist2/Makefile | awk -F':=' '{print $2}' | tr -d ' ')
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_OUTPUT
-          cd /tmp/openlist2
-          VersionInfo=$(git show -s --date=short --format="Author: %an<br/>date: %cd<br/>commit: %s<br/>commit hash: %H<br/>")
-          echo "VersionInfo=$VersionInfo" >> $GITHUB_OUTPUT
 
       - name: Build with Static Linking
         run: |
@@ -104,14 +100,14 @@ jobs:
             tar -zcvf ${{ matrix.sdk }}-${{ matrix.arch }}.tar.gz -C bin/packages/${{ matrix.arch }}/ packages_ci
           fi
 
+      # 修正：既然你已经用了 upload-artifact，Release 建议像原作者一样直接绑定 tag_name，或者移除高并发的 release 动作，直接去 Artifacts 里下载。
       - name: Upload packages
         uses: ncipollo/release-action@v1
         with:
+          tag: ${{ steps.DIY.outputs.PKG_VERSION }}
           name: ${{ steps.DIY.outputs.PKG_VERSION }}
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ steps.DIY.outputs.PKG_VERSION }}
           allowUpdates: true
           replacesArtifacts: true
           prerelease: false
           artifacts: "${{ matrix.sdk }}-${{ matrix.arch }}.tar.gz"
-          body: ${{ steps.DIY.outputs.VersionInfo }}
