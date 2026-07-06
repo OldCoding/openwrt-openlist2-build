@@ -1,7 +1,7 @@
 name: Build Packages
 
 on:
-  workflow_dispatch: # 改为手动触发，避免点Star频繁触发导致缓存爆炸
+  workflow_dispatch:
   watch:
     types: [started]
 
@@ -11,7 +11,6 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
-      max-parallel: 4 # 👈 关键：限制最大并发数，防止缓存服务器高并发死锁
       matrix:
         arch:
           - aarch64_cortex-a53
@@ -55,7 +54,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      # 修正：直接在当前目录下修改，不需要再乱 clone
       - name: Customization of source code
         id: DIY
         run: |
@@ -75,7 +73,7 @@ jobs:
           sed -i '/openlist2.init/a \\t/usr/bin/upx --lzma --best $(1)\/usr\/bin\/openlist2' openlist2/Makefile
 
       - name: Build Packages
-        uses: sbwml/openwrt-gh-action-sdk@go1.26
+        uses: OldCoding/openwrt-gh-action-sdk@go1.26
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
           FEEDNAME: packages_ci
