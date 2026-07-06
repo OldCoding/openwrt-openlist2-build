@@ -10,6 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         arch:
           - aarch64_cortex-a53
@@ -56,7 +57,7 @@ jobs:
       - name: Clone source code
         run: |
           git clone  --depth 1 https://github.com/sbwml/luci-app-openlist2 /tmp/openlist2
-          mv /tmp/openlist2/luci-app-openlist2 /tmp/openlist2/openlist2 -t ./
+          mv /tmp/openlist2/* ./
 
       - name: Customization of source code
         id: DIY
@@ -104,7 +105,7 @@ jobs:
           fi
 
       - name: Upload packages
-        uses: ncipollo/release-action@main
+        uses: ncipollo/release-action@v1
         with:
           name: ${{ steps.DIY.outputs.PKG_VERSION }}
           token: ${{ secrets.GITHUB_TOKEN }}
