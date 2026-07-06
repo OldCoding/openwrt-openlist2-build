@@ -46,10 +46,10 @@ jobs:
           - x86_64
         sdk:
           - openwrt-24.10
-          - SNAPSHOT
+          - openwrt-25.12
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@main
         with:
           fetch-depth: 0
 
@@ -78,7 +78,7 @@ jobs:
           sed -i '/openlist2.init/a \\t/usr/bin/upx --lzma --best $(1)\/usr\/bin\/openlist2' openlist2/Makefile
 
       - name: Build Packages
-        uses: sbwml/openwrt-gh-action-sdk@go1.25
+        uses: sbwml/openwrt-gh-action-sdk@go1.26
         env:
           ARCH: ${{ matrix.arch }}-${{ matrix.sdk }}
           FEEDNAME: packages_ci
@@ -86,7 +86,7 @@ jobs:
           NO_REFRESH_CHECK: true
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@main
         with:
           name: ${{ matrix.arch }}-${{ matrix.sdk }}
           path: |
@@ -97,7 +97,7 @@ jobs:
       - name: Create compress files
         continue-on-error: true
         run: |
-          if [ "${{ matrix.arch }}" = "riscv64_riscv64" ] && [ "${{ matrix.sdk }}" = "SNAPSHOT" ]; then
+          if [ "${{ matrix.arch }}" = "riscv64_riscv64" ] && [ "${{ matrix.sdk }}" = "openwrt-25.12" ]; then
             tar -zcvf ${{ matrix.sdk }}-${{ matrix.arch }}.tar.gz -C bin/packages/riscv64_generic/ packages_ci
           else
             tar -zcvf ${{ matrix.sdk }}-${{ matrix.arch }}.tar.gz -C bin/packages/${{ matrix.arch }}/ packages_ci
