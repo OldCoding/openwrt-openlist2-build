@@ -54,14 +54,20 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Clone source code
+        run: |
+          git clone  --depth 1 https://github.com/sbwml/luci-app-openlist2 /tmp/openlist2
+          mv /tmp/openlist2/* ./
+
       - name: Customization of source code
         id: DIY
         run: |
-          if [ -d "luci-app-openlist2" ]; then
-            sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
-          fi
+          sed -i "s|services|nas|g" luci-app-openlist2/root/usr/share/luci/menu.d/luci-app-openlist2.json
           PKG_VERSION=$(grep -E '^\s*PKG_VERSION:=' openlist2/Makefile | awk -F':=' '{print $2}' | tr -d ' ')
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_OUTPUT
+          cd /tmp/openlist2
+          VersionInfo=$(git show -s --date=short --format="Author: %an<br/>date: %cd<br/>commit: %s<br/>commit hash: %H<br/>")
+          echo "VersionInfo=$VersionInfo" >> $GITHUB_OUTPUT
 
       - name: Build with Static Linking
         run: |
